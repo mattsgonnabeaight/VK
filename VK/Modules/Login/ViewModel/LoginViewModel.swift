@@ -25,4 +25,17 @@ final class LoginViewModel {
         }
     }
 
+    func register() {
+        print("Attempting register with email: \(username) and password: \(password)")
+        checkerService.signUp(email: username, password: password) { [weak self] result in
+            switch result {
+            case .success:
+                print("Register successful!")
+                self?.delegate?.didLoginSuccessfully()
+            case .failure(let error):
+                print("Register failed with error: \(error.localizedDescription)")
+                self?.delegate?.loginDidFail(with: error)
+            }
+        }
+    }
 }

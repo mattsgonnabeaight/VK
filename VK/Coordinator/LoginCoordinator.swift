@@ -17,6 +17,7 @@ final class LoginCoordinator {
     func start() {
         let loginService = CheckerService() // Пример зависимости
         let viewModel = LoginViewModel(checkerService: loginService)
+        viewModel.delegate = self
         let loginVC = LoginViewController(delegate: self) // Передаем делегат
 
         loginVC.viewModel = viewModel

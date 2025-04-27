@@ -2,6 +2,7 @@ import UIKit
 
 final class ProfileViewController: UIViewController {
     
+    weak var delegate: ProfileViewControllerDelegate?
     private let viewModel: ProfileViewModel
     
     private let welcomeLabel: UILabel = {
@@ -10,6 +11,15 @@ final class ProfileViewController: UIViewController {
         label.textAlignment = .center
         label.numberOfLines = 0
         return label
+    }()
+    
+    private let logoutButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("Logout", for: .normal)
+        button.backgroundColor = .systemRed
+        button.setTitleColor(.white, for: .normal)
+        button.layer.cornerRadius = 8
+        return button
     }()
     
     init(viewModel: ProfileViewModel) {
@@ -26,7 +36,14 @@ final class ProfileViewController: UIViewController {
         view.backgroundColor = .systemBackground
         setupLayout()
         setupContent()
+        setupLogoutButton()
     }
+
+    private func setupContent() {
+        viewModel.fetchUserProfile() // <-- Важно вызвать перед показом
+        welcomeLabel.text = "Welcome, \(viewModel.username)!"
+    }
+
     
     private func setupLayout() {
         welcomeLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -39,7 +56,17 @@ final class ProfileViewController: UIViewController {
         ])
     }
     
-    private func setupContent() {
-        welcomeLabel.text = "Welcome, \(viewModel.username)!" // Пример данных
+    private func setupLogoutButton() {
+        logoutButton.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(logoutButton)
+        NSLayoutConstraint.activate([
+            logoutButton.topAnchor.constraint(equalTo: welcomeLabel.bottomAnchor, constant: 20),
+            logoutButton.centerXAnchor.constraint(equalTo: view.centerXAnchor)
+        ])
+        logoutButton.addTarget(self, action: #selector(logoutTapped), for: .touchUpInside)
+    }
+
+    @objc private func logoutTapped() {
+        delegate?.didRequestLogout()
     }
 }

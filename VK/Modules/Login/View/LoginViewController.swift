@@ -3,7 +3,7 @@ import FirebaseAuth
 
 class LoginViewController: UIViewController {
     
-    var viewModel: LoginViewModel!
+    var viewModel: LoginViewModel! 
     weak var delegate: LoginViewControllerDelegate?
     
     private let usernameTextField: UITextField = {
@@ -31,6 +31,15 @@ class LoginViewController: UIViewController {
         return btn
     }()
     
+    private let registerButton: UIButton = {
+        let btn = UIButton(type: .system)
+        btn.setTitle("Register", for: .normal)
+        btn.backgroundColor = .systemBackground
+        btn.setTitleColor(.systemBlue, for: .normal)
+        btn.layer.cornerRadius = 8
+        return btn
+    }()
+    
     // Инициализатор, принимающий делегат
     init(delegate: LoginViewControllerDelegate) {
         self.delegate = delegate
@@ -50,7 +59,7 @@ class LoginViewController: UIViewController {
     }
     
     private func setupLayout() {
-        let stack = UIStackView(arrangedSubviews: [usernameTextField, passwordTextField, loginButton])
+        let stack = UIStackView(arrangedSubviews: [usernameTextField, passwordTextField, loginButton, registerButton])
         stack.axis = .vertical
         stack.spacing = 16
         stack.translatesAutoresizingMaskIntoConstraints = false
@@ -65,6 +74,7 @@ class LoginViewController: UIViewController {
     
     private func setupActions() {
         loginButton.addTarget(self, action: #selector(loginButtonTapped), for: .touchUpInside)
+        registerButton.addTarget(self, action: #selector(registerButtonTapped), for: .touchUpInside)
     }
     
     @objc private func loginButtonTapped() {
@@ -73,13 +83,24 @@ class LoginViewController: UIViewController {
             showAlert(message: "Please enter both email and password.")
             return
         }
-        
-        // Передаем данные в модель
+
         viewModel.username = email
         viewModel.password = password
         
-        // Вызываем метод login
         viewModel.login()
+    }
+    
+    @objc private func registerButtonTapped() {
+        guard let email = usernameTextField.text, !email.isEmpty,
+              let password = passwordTextField.text, !password.isEmpty else {
+            showAlert(message: "Please enter both email and password.")
+            return
+        }
+        
+        viewModel.username = email
+        viewModel.password = password
+        
+        viewModel.register()
     }
 
     

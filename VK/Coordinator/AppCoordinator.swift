@@ -1,5 +1,6 @@
 import UIKit
 
+
 final class AppCoordinator {
     
     private let window: UIWindow
@@ -28,6 +29,7 @@ final class AppCoordinator {
     private func showProfile() {
         let profileViewModel = ProfileViewModel()
         let profileVC = ProfileViewController(viewModel: profileViewModel)
+        profileVC.delegate = self
         navigationController.setViewControllers([profileVC], animated: true)
     }
 }
@@ -35,5 +37,11 @@ final class AppCoordinator {
 extension AppCoordinator: LoginCoordinatorDelegate {
     func didLoginSuccessfully() {
         showProfile()
+    }
+}
+
+extension AppCoordinator: ProfileViewControllerDelegate {
+    func didRequestLogout() {
+        showLogin()
     }
 }
