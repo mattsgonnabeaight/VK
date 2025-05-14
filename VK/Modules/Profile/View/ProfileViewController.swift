@@ -1,4 +1,5 @@
 import UIKit
+import FirebaseAuth 
 
 final class ProfileViewController: UIViewController {
     
@@ -67,6 +68,9 @@ final class ProfileViewController: UIViewController {
     }
 
     @objc private func logoutTapped() {
+        if let email = Auth.auth().currentUser?.email {
+            RealmUserManager.shared.logoutUser(email: email)
+        }
         delegate?.didRequestLogout()
     }
 }

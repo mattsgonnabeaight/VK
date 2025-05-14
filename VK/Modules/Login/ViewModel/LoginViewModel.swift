@@ -12,14 +12,12 @@ final class LoginViewModel {
     }
 
     func login() {
-        print("Attempting login with email: \(username) and password: \(password)")
         checkerService.checkCredentials(email: username, password: password) { [weak self] result in
             switch result {
             case .success:
-                print("Login successful!")
+                RealmUserManager.shared.saveAuthorizedUser(email: self?.username ?? "")
                 self?.delegate?.didLoginSuccessfully()
             case .failure(let error):
-                print("Login failed with error: \(error.localizedDescription)")
                 self?.delegate?.loginDidFail(with: error)
             }
         }
