@@ -15,9 +15,15 @@ final class AppCoordinator {
     func start() {
         window.rootViewController = navigationController
         window.makeKeyAndVisible()
-        
-        showLogin()
+
+        if let storedUser = RealmUserManager.shared.getAuthorizedUser() {
+            print("Автовход пользователя: \(storedUser.email)")
+            showProfile()
+        } else {
+            showLogin()
+        }
     }
+
     
     private func showLogin() {
         let loginCoordinator = LoginCoordinator(navigationController: navigationController)
