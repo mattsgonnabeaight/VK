@@ -1,76 +1,77 @@
 import UIKit
-import FirebaseAuth 
+import FirebaseAuth
+import RealmSwift
 
 final class ProfileViewController: UIViewController {
+
+    private let headerView = ProfileHeaderView()
+    private let logoutButton = UIButton(type: .system)
+
     
-    weak var delegate: ProfileViewControllerDelegate?
     private let viewModel: ProfileViewModel
-    
-    private let welcomeLabel: UILabel = {
-        let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 24, weight: .semibold)
-        label.textAlignment = .center
-        label.numberOfLines = 0
-        return label
-    }()
-    
-    private let logoutButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setTitle("Logout", for: .normal)
-        button.backgroundColor = .systemRed
-        button.setTitleColor(.white, for: .normal)
-        button.layer.cornerRadius = 8
-        return button
-    }()
-    
-    init(viewModel: ProfileViewModel) {
-        self.viewModel = viewModel
-        super.init(nibName: nil, bundle: nil)
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
+
+        init(viewModel: ProfileViewModel) {
+            self.viewModel = viewModel
+            super.init(nibName: nil, bundle: nil)
+        }
+
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
-        setupLayout()
-        setupContent()
+        title = "Профиль"
+
+        setupHeader()
         setupLogoutButton()
+        loadUserData()
     }
 
-    private func setupContent() {
-        viewModel.fetchUserProfile() // <-- Важно вызвать перед показом
-        welcomeLabel.text = "Welcome, \(viewModel.username)!"
-    }
+    private func setupHeader() {
+        view.addSubview(headerView)
+        headerView.translatesAutoresizingMaskIntoConstraints = false
 
-    
-    private func setupLayout() {
-        welcomeLabel.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(welcomeLabel)
-        
         NSLayoutConstraint.activate([
-            welcomeLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            welcomeLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
-            welcomeLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24)
+            headerView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            headerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            headerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            headerView.heightAnchor.constraint(equalToConstant: 250)
         ])
     }
-    
+
     private func setupLogoutButton() {
-        logoutButton.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(logoutButton)
-        NSLayoutConstraint.activate([
-            logoutButton.topAnchor.constraint(equalTo: welcomeLabel.bottomAnchor, constant: 20),
-            logoutButton.centerXAnchor.constraint(equalTo: view.centerXAnchor)
-        ])
+        logoutButton.setTitle("Выйти", for: .normal)
+        logoutButton.setTitleColor(.systemRed, for: .normal)
+        logoutButton.translatesAutoresizingMaskIntoConstraints = false
         logoutButton.addTarget(self, action: #selector(logoutTapped), for: .touchUpInside)
+
+        NSLayoutConstraint.activate([
+            logoutButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            logoutButton.topAnchor.constraint(equalTo: headerView.bottomAnchor, constant: 32),
+            logoutButton.heightAnchor.constraint(equalToConstant: 44)
+        ])
+    }
+
+    private func loadUserData() {
+        guard let user = try? Realm().objects(UserObject.self).first else { return }
+        headerView.fullNameLabel.text = user.fullName
     }
 
     @objc private func logoutTapped() {
-        if let email = Auth.auth().currentUser?.email {
-            RealmUserManager.shared.logoutUser(email: email)
+        do {
+            try Auth.auth().signOut()
+            
+            let realm = try Realm()
+            try realm.write {
+                realm.deleteAll()
+            }
+            
+            NotificationCenter.default.post(name: .didLogout, object: nil)
+        } catch {
+            print("Ошибка при логауте: \(error.localizedDescription)")
         }
-        delegate?.didRequestLogout()
     }
 }

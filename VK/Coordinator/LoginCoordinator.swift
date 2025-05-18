@@ -8,6 +8,8 @@ final class LoginCoordinator {
     
     weak var delegate: LoginCoordinatorDelegate?
     
+    var onFinish: (() -> Void)?
+    
     private let navigationController: UINavigationController
 
     init(navigationController: UINavigationController) {
@@ -43,6 +45,7 @@ extension LoginCoordinator: LoginViewControllerDelegate {
 extension LoginCoordinator: LoginViewModelDelegate {
     func didLoginSuccessfully() {
         delegate?.didLoginSuccessfully()
+        onFinish?()
     }
     
     func loginDidFail(with error: Error) {
