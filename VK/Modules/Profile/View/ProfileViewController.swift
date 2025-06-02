@@ -6,7 +6,10 @@ final class ProfileViewController: UIViewController {
 
     private let headerView = ProfileHeaderView()
     private let logoutButton = UIButton(type: .system)
+    let currentUserEmail = Auth.auth().currentUser?.email ?? "Аноним"
 
+    private let tableView = UITableView()
+    private var posts: [Post] = []
     
     private let viewModel: ProfileViewModel
 
@@ -26,7 +29,9 @@ final class ProfileViewController: UIViewController {
 
         setupHeader()
         setupLogoutButton()
+        setupTableView()
         loadUserData()
+        loadPosts()
     }
 
     private func setupHeader() {
@@ -40,6 +45,23 @@ final class ProfileViewController: UIViewController {
             headerView.heightAnchor.constraint(equalToConstant: 250)
         ])
     }
+    
+    private func setupTableView() {
+           view.addSubview(tableView)
+           tableView.translatesAutoresizingMaskIntoConstraints = false
+
+           tableView.register(PostTableViewCell.self, forCellReuseIdentifier: PostTableViewCell.identifier)
+           tableView.dataSource = self
+           tableView.delegate = self
+           tableView.separatorStyle = .none
+
+           NSLayoutConstraint.activate([
+               tableView.topAnchor.constraint(equalTo: logoutButton.bottomAnchor, constant: 16),
+               tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+               tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+               tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+           ])
+       }
 
     private func setupLogoutButton() {
         view.addSubview(logoutButton)
@@ -59,6 +81,17 @@ final class ProfileViewController: UIViewController {
         guard let user = try? Realm().objects(UserObject.self).first else { return }
         headerView.fullNameLabel.text = user.fullName
     }
+    
+    private func loadPosts() {
+        let email = Auth.auth().currentUser?.email ?? "Аноним"
+        posts = [
+            Post(author: email, text: "Это мой первый пост!", isLiked: false),
+            Post(author: email, text: "Привет, мир!", isLiked: true),
+            Post(author: email, text: "Сегодня прекрасная погода.", isLiked: false)
+        ]
+        tableView.reloadData()
+    }
+
 
     @objc private func logoutTapped() {
         do {
@@ -75,3 +108,30 @@ final class ProfileViewController: UIViewController {
         }
     }
 }
+extension ProfileViewController: UITableViewDataSource, UITableViewDelegate {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        posts.count
+    }
+
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        guard let cell = tableView.dequeueReusableCell(
+            withIdentifier: PostTableViewCell.identifier,
+            for: indexPath
+        ) as? PostTableViewCell else {
+            return UITableViewCell()
+        }
+
+        var post = posts[indexPath.row]
+        cell.configure(with: post)
+
+        cell.likeButtonTapped = { [weak self] in
+            guard let self = self else { return }
+            post.isLiked.toggle()
+            self.posts[indexPath.row] = post
+            self.tableView.reloadRows(at: [indexPath], with: .automatic)
+        }
+
+        return cell
+    }
+}
+

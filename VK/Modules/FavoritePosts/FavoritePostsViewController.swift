@@ -25,7 +25,6 @@ final class FavoritePostsViewController: UIViewController {
         tableView.delegate = self
         tableView.dataSource = self
 
-        // Загружаем понравившиеся посты
         viewModel.loadFavoritePosts()
     }
 }
